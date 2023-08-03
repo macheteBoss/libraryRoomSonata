@@ -11,11 +11,46 @@ use Sonata\AdminBundle\Show\ShowMapper;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 
 final class BooksAdmin extends AbstractAdmin
 {
+    private $imageDir;
+
+    public function __construct(?string $code = null, ?string $class = null, ?string $baseControllerName = null, $dir)
+    {
+        parent::__construct($code, $class, $baseControllerName);
+        $this->imageDir = $dir;
+    }
+
     protected function configureFormFields(FormMapper $form): void
     {
+        $image = $this->getSubject();
+
+        $fileFormOptions = [
+            'required' => false,
+            'label' => 'Image',
+            'constraints' => [
+                new File([
+                    'maxSize' => '1024k',
+                    'mimeTypes' => [
+                        'image/png',
+                        'image/jpeg',
+                    ],
+                    'mimeTypesMessage' => 'Please upload a valid image',
+                ])
+            ],
+        ];
+
+        if ($image && $image->getImage()) {
+            $request = $this->getRequest();
+            $fullPath = $request->getBasePath() . '/' . $image->getUploadDir() . '/' . $image->getImage();
+
+            $fileFormOptions['help'] = '<img src="' . $fullPath . '" class="admin-preview" style = "width:200px;height:200px;"/>';
+            $fileFormOptions['help_html'] = true;
+        }
+
         $form->add('title', TextType::class);
         $form->add('year', IntegerType::class);
         $form->add('authors', EntityType::class, [
@@ -24,6 +59,7 @@ final class BooksAdmin extends AbstractAdmin
             'multiple' => true,
             'required' => true
         ]);
+        $form->add('file', FileType::class, $fileFormOptions);
     }
 
     protected function configureDatagridFilters(DatagridMapper $datagrid): void
@@ -56,5 +92,25 @@ final class BooksAdmin extends AbstractAdmin
         $show->add('authors', null, [
             'associated_property' => 'name',
         ]);
+    }
+
+    public function prePersist($object) {
+        $this->saveFile($object);
+    }
+
+    public function preUpdate($object) {
+        $this->saveFile($object);
+    }
+
+    public function preRemove($object) {
+        if ($object->getImage()) {
+            unlink($object->getUploadRootDir($this->imageDir) . '/' . $object->getImage());
+        }
+    }
+
+    public function saveFile($object) {
+        if ($object->getFile()) {
+            $object->upload($this->imageDir);
+        }
     }
 }
