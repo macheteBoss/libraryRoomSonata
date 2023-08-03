@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    {% if items %}
+        <h1>Книги у которых более 2-х авторов:</h1>
+        <ul>
+            {% for item, k in items %}
+                <li>{{ item }} - {{ k }} автор(а/ов)</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h1>Нет результатов!</h1>
+    {% endif %}
+
+{% endblock %}
