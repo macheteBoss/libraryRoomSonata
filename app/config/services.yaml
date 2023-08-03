@@ -31,3 +31,14 @@ services:
     mailer:
         alias: fos_user.mailer.noop
         public: true
+
+    admin.authors:
+        class: App\Admin\AuthorsAdmin
+        arguments: [~, App\Entity\Author, ~]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: library, label: Authors }
+    admin.books:
+        class: App\Admin\BooksAdmin
+        arguments: [~, App\Entity\Book, ~]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: library, label: Books }
