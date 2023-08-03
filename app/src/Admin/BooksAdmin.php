@@ -13,15 +13,20 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use App\Entity\Book;
+use Doctrine\ORM\EntityManagerInterface;
+use Sonata\AdminBundle\Datagrid\ProxyQueryInterface;
 
 final class BooksAdmin extends AbstractAdmin
 {
     private $imageDir;
+    private $em;
 
-    public function __construct(?string $code = null, ?string $class = null, ?string $baseControllerName = null, $dir)
+    public function __construct(?string $code = null, ?string $class = null, ?string $baseControllerName = null, $dir, EntityManagerInterface $em)
     {
         parent::__construct($code, $class, $baseControllerName);
         $this->imageDir = $dir;
+        $this->em = $em;
     }
 
     protected function configureFormFields(FormMapper $form): void
@@ -100,17 +105,83 @@ final class BooksAdmin extends AbstractAdmin
 
     public function preUpdate($object) {
         $this->saveFile($object);
+
+        $conn = $this->em->getConnection();
+
+        $sql = '
+            SELECT * FROM book_author
+            WHERE book_id = ' . $object->getId() . '
+            ';
+        $stmt = $conn->prepare($sql);
+        $resultSet = $stmt->executeQuery();
+        $data = $resultSet->fetchAllAssociative();
+
+        $authorIds = [];
+        foreach ($data as $item) {
+            $authorIds[] = $item['author_id'];
+        }
+
+        $buf = $authorIds;
+
+        foreach ($object->getAuthors() as $key => $author) {
+            if (!in_array($author->getId(), $authorIds)) {
+                $author->setCountBooks($author->getCountBooks() + 1);
+            } else {
+                unset($buf[$key]);
+            }
+        }
+
+        if (!empty($buf)) {
+            foreach ($buf as $bufItem) {
+                $author = $this->getModelManager()->find(Author::class, $bufItem);
+                $author->setCountBooks($author->getCountBooks() - 1);
+            }
+        }
     }
 
     public function preRemove($object) {
         if ($object->getImage()) {
             unlink($object->getUploadRootDir($this->imageDir) . '/' . $object->getImage());
         }
+
+        foreach ($object->getAuthors() as $author) {
+            $author->setCountBooks($author->getCountBooks() - 1);
+        }
     }
 
     public function saveFile($object) {
         if ($object->getFile()) {
             $object->upload($this->imageDir);
+        }
+    }
+
+    public function postPersist($object)
+    {
+        foreach ($object->getAuthors() as $author) {
+            $author->setCountBooks($author->getCountBooks() + 1);
+        }
+
+        $this->getModelManager()->update($object);
+    }
+
+    public function preBatchAction($actionName, ProxyQueryInterface $query, array & $idx, $allElements = false)
+    {
+        //Возможно не лучшее решение, но это единственное что я придумал с массовыми действиями и флагом $allElements
+        if ('delete' === $actionName) {
+            if (true === $allElements) {
+                $booksRepository = $this->em->getRepository(Book::class);
+                $elements = $booksRepository->findAll();
+
+                foreach ($elements as $element) {
+                    $obj = $this->getObject($element->getId());
+                    $this->preRemove($obj);
+                }
+            } else {
+                foreach ($idx as $id) {
+                    $obj = $this->getObject($id);
+                    $this->preRemove($obj);
+                }
+            }
         }
     }
 }

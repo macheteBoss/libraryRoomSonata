@@ -40,6 +40,6 @@ services:
             - { name: sonata.admin, manager_type: orm, group: library, label: Authors }
     admin.books:
         class: App\Admin\BooksAdmin
-        arguments: [~, App\Entity\Book, ~, '%public_dir%']
+        arguments: [~, App\Entity\Book, ~, '%public_dir%', '@doctrine.orm.entity_manager']
         tags:
             - { name: sonata.admin, manager_type: orm, group: library, label: Books }
