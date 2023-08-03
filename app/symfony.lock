@@ -40,6 +40,9 @@
             "migrations/.gitignore"
         ]
     },
+    "friendsofsymfony/user-bundle": {
+        "version": "v2.2.4"
+    },
     "knplabs/knp-menu-bundle": {
         "version": "v3.2.0"
     },
@@ -95,6 +98,9 @@
             "config/packages/sonata_block.yaml"
         ]
     },
+    "sonata-project/datagrid-bundle": {
+        "version": "3.5.0"
+    },
     "sonata-project/doctrine-extensions": {
         "version": "1.18",
         "recipe": {
@@ -136,6 +142,12 @@
             "version": "1.2",
             "ref": "30dba2f9b719f21b497a6302f41aac07f9079e13"
         }
+    },
+    "sonata-project/user-bundle": {
+        "version": "4.15.0"
+    },
+    "symfony/acl-bundle": {
+        "version": "v2.3.0"
     },
     "symfony/console": {
         "version": "4.4",

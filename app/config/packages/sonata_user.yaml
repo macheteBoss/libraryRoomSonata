@@ -1,0 +1,7 @@
+sonata_user:
+    security_acl: true
+    manager_type: orm
+    mailer: fos_user.mailer.noop
+    class:
+        user: App\Entity\User
+        group: App\Entity\UserGroup
