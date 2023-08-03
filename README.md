@@ -27,3 +27,15 @@
 
 Сбросить кеш:
 # php bin/console cache:clear
+
+
+# Где смотреть
+
+Результат sql запроса:
+
+localhost:8090/
+
+
+SonataAdmin:
+
+localhost:8090/admin
