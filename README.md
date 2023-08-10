@@ -9,7 +9,7 @@
 # docker-compose up --build -d
 
 Заходим в контейнер:
-# docker exec -it sonataroom-app-php-cli bash
+# docker exec -it sonataroom-php-cli bash
 
 Выполняем команды:
 
