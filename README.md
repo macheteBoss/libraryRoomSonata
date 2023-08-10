@@ -8,6 +8,9 @@
 Заходим в папку с проектом, открываем в терминале, выполняем:
 # docker-compose up --build -d
 
+Поставим права на папку для успешной загрузки изображений:
+# chmod -R 777 app/public
+
 Заходим в контейнер:
 # docker exec -it sonataroom-php-cli bash
 
