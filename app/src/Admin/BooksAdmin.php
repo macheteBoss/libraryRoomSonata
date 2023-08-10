@@ -110,21 +110,7 @@ final class BooksAdmin extends AbstractAdmin
     public function preUpdate($object) {
         $this->saveFile($object);
 
-        $conn = $this->em->getConnection();
-
-        $sql = '
-            SELECT * FROM book_author
-            WHERE book_id = ' . $object->getId() . '
-            ';
-        $stmt = $conn->prepare($sql);
-        $resultSet = $stmt->executeQuery();
-        $data = $resultSet->fetchAllAssociative();
-
-        $authorIds = [];
-        foreach ($data as $item) {
-            $authorIds[] = $item['author_id'];
-        }
-
+        $authorIds = $this->em->getRepository(Book::class)->getAuthorIdsByBookId($object->getId());
         $buf = $authorIds;
 
         foreach ($object->getAuthors() as $key => $author) {
